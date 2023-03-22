@@ -3,6 +3,8 @@ library(terra)
 library(geodata)
 library(ggplot2)
 #library(data.table)
+dir.create("graphics/cts/stressDaysRatiobyCrop/pwc_wbgt_out", F, F)
+dir.create("data/wbgt", F, F)
 path <- "data/wbgt/"
 sspChoices <- c("ssp126", "ssp585")
 startYearChoices <- c(2041, 2081)
@@ -170,30 +172,6 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   
   gridLineSize <- 0.1; borderLineSize <- 0.2
   
-  # g <- ggplot(r_stress_p_proj_sf, aes(fill = stressCts_disc_f)) +
-  #   scale_fill_manual(values = colorValues, drop = FALSE) +
-  #   geom_sf(show.legend = legendSwitch, size = gridLineSize) + 
-  #   labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + #
-  #   theme_bw() +
-  #   theme(
-  #     legend.text.align = 1,
-  #     axis.ticks = element_blank(),
-  #     plot.title = element_text(size = 12, hjust = 0.5),
-  #     plot.caption = element_text(hjust = 0, vjust = 3.0, size = 8),
-  #     legend.margin = margin(-20, 0, 0, 0)
-  #   ) +
-  #   theme(legend.position = 'bottom') +
-  #   geom_sf(data = border_proj_sf, 
-  #           color = "black", size = borderLineSize, stat = "sf", fill = NA, position = "identity") +
-  #   #    theme(legend.margin = margin(-20, 0, 0, 0)) +
-  #   theme(plot.margin = grid::unit(c(0,0,0,0), "mm"))
-  # print(g)
-  # fileName_out_stressDays_count <- paste0("graphics/cts/stressDaysbyCrop/", outChoice, "/stressDaysCtGS_", regionChoice, "_", qChoice, "_", waterSource, "_cts_", outChoice, "_daily_mean", "_", k, "_sval_", stressValue, "_", yearSpan, ".", graphicType) 
-  # h <- f_h(regionExtent, defaultWidth)
-  # ggsave(filename = fileName_out_stressDays_count, plot = g, device = graphicType, width = defaultWidth, height = h, units = "in", dpi = 300)
-  # system2('pdfcrop', c(fileName_out_stressDays_count, fileName_out_stressDays_count)) # gets rid of white space around the figure in the pdf
-  # print(paste0("fileName out: ", fileName_out_stressDays_count))
-  
   # share of stress days in gsl days -------------------------
   gsl_ratio <- 100 * r_stress/gsl_region_masked
   gsl_ratio[gsl_ratio > 100] <- 100 # to deal with a few rare cases
@@ -203,12 +181,10 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   gsl_ratio_p_proj <- project(gsl_ratio_p, proj_to_use)
   gsl_ratio_p_proj_sf <- sf::st_as_sf(gsl_ratio_p_proj)
   
-  #breaks <- testbreaks
-  gsl_ratio_p_proj_sf$stressShare_disc <- cut(gsl_ratio_p_proj_sf$stressShare, breaks = breaks, include.lowest = TRUE, right = TRUE)
+   gsl_ratio_p_proj_sf$stressShare_disc <- cut(gsl_ratio_p_proj_sf$stressShare, breaks = breaks, include.lowest = TRUE, right = TRUE)
   gsl_ratio_p_proj_sf <- sf::st_intersection(gsl_ratio_p_proj_sf, border_proj_sf)
   gsl_ratio_p_proj_sf$stressShare_disc_f <- as.factor(gsl_ratio_p_proj_sf$stressShare_disc)
-  legendTitle <- paste0("Period share (%), days with PWC below ", stressValue, "%")
-  
+  legendTitle <- paste0("Period share (%), days with\nPWC below ", stressValue, "%")
   titleText_start <- paste0(waterSourceText_upper, " " , qName, ", share of days in period with PWC below\n", stressValue, " percent, ")
   titleText <- paste0(titleText_start,  sspText, ", ", yearSpanText, ", ", regionFancyName)
   if (qChoice %in% c("q1", "q2", "q3", "q4")) { # for quarterly results
@@ -226,9 +202,7 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
     theme_bw() +
     theme(
       legend.text.align = 1,
-      # axis.text.x = element_blank(),
-      # axis.text.y = element_blank(),
-      axis.ticks = element_blank(),
+       axis.ticks = element_blank(),
       plot.title = element_text(size = 12, hjust = 0.5),
       plot.caption = element_text(hjust = 0, vjust = 3.0, size = 8),
       legend.margin = margin(-20, 0, 0, 0)
@@ -237,6 +211,7 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
     geom_sf(data = border_proj_sf,
             color = "black", size = borderLineSize, stat = "sf", fill = NA, position = "identity") +
     theme(legend.margin = margin(-20, 0, 0, 0)) +
+    theme(legend.text=element_text(size=9)) +
     theme(plot.margin = grid::unit(c(0,0,0,0), "mm"))
   print(g)
   # browser()
@@ -247,6 +222,9 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   system2('pdfcrop', c(fileName_stressDaysRatio_out, fileName_stressDaysRatio_out)) # gets rid of white space around the figure in the pdf
   print(paste0("fileName out: ", fileName_stressDaysRatio_out))
 }
+
+dir.create("graphics/cts/stressDaysRatiobyCrop/pwc_wbgt_out/", F, F)
+
 
 #test data
 k = "historical"
