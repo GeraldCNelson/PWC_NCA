@@ -1,26 +1,36 @@
 source("R/basicSpatialVariables.R")
+library(terra)
+library(geodata)
+library(ggplot2)
+#library(data.table)
 path <- "data/wbgt/"
 sspChoices <- c("ssp126", "ssp585")
 startYearChoices <- c(2041, 2081)
+graphicType <- "pdf"
+defaultWidth <- 12
+country_US <- gadm(country = "USA", level = 1, path = "data-raw/gadm/", resolution = 2)
+states_abbr_SW <- c("CA", "AZ", "NM", "CO", "NV", "UT")
+states_SW <- subset(country_US,country_US$HASC_1 %in% paste0("US.", states_abbr_SW))
+ext_states_SW <- align(ext(states_SW), rast(res = 0.5), "out")
+states_SW_sf <- sf::st_as_sf(states_SW)
 
 legendSwitch <- TRUE
 stressValue = 75
-breaks <-   c(0, 12, 25, 38, 50, 62, 75, 88, 100)
+runlength <- 1
+breaks <-   c(0, 10, 20, 30, 40, 50, 60, 70 , 90, 100)
 regionChoice <- "states_SW"
 yearRange = 19
 qChoice = "q3"; qName <- "JAS"
 outChoice <- "pwc_wbgt_out"
 waterSource <- "rf"
-palName_PWC <- "YlOrRd"
+palName <- "YlOrRd"
 # palName_NCA <- "BuPu"
 palCt <- 9
 f_palette <- function(palName, palCt) {
   colorList <- (RColorBrewer::brewer.pal(palCt, palName)) 
 }
-colorList <- f_palette(palName_PWC, palCt)
+colorList <- f_palette(palName, palCt)
 colorValues <- colorList
-
-qNameLookup <- as.data.table(readxl::read_excel("data/crop_mask/cropMask_calendarLookup.xlsx"))
 
 f_quarterFancyName <- function(qName) {
   if (qName == "JFM") return("January to March")
@@ -43,13 +53,6 @@ f_waterSourceText <- function(waterSource) {
   return(waterSourceText)
 }
 
-f_getStressValue <- function(stressLevel) {
-  if (stressLevel == "extremeStress") stressValue <- 40
-  if (stressLevel == "moderateStress") stressValue <- 50 
-  if (stressLevel == "noStress") stressValue <- 60
-  return(stressValue)
-}
-
 f_sspText <- function(k) {
   if (k == "historical") kText <- ""
   if (k == "ssp126") kText <- "SSP1-2.6"
@@ -64,33 +67,40 @@ f_periodFancyName <- function(yearSpan) {
   return(yearSpanText)
 }
 
-f_regionExtentLookup <- function(regionChoice) { # all in lat/lon with xmin, xmax, ymin, ymax order
-  #   browser()
-  ext_globe <- ext(-180, 180, -60, 90)
-  ext_midEast <- ext(31, 62.0, 10.5, 37)
-  ext_SouthAsia <- ext(65, 89, 6, 35)
-  ext_SEAsia <- ext(89, 148, -18, 26)
-  ext_NamCentAm <- ext(-121, -68, 10, 34)
-  ext_states_SW <- align(ext(states_SW), rast(res = 0.5), "out")
-  if (regionChoice == "states_SW") return(ext_states_SW) 
-}
+# f_regionExtentLookup <- function(regionChoice) { # all in lat/lon with xmin, xmax, ymin, ymax order
+#   #   browser()
+#   ext_globe <- ext(-180, 180, -60, 90)
+#   ext_midEast <- ext(31, 62.0, 10.5, 37)
+#   ext_SouthAsia <- ext(65, 89, 6, 35)
+#   ext_SEAsia <- ext(89, 148, -18, 26)
+#   ext_NamCentAm <- ext(-121, -68, 10, 34)
+#   ext_states_SW <- align(ext(states_SW), rast(res = 0.5), "out")
+#   if (regionChoice == "states_SW") return(ext_states_SW) 
+# }
 
 f_regionFancyName <- function(regionChoice) {
   if (regionChoice == "states_SW") return("Southwest US")
 }
 
-f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice, breaks) {
+f_h <- function(regionExtent, defaultWidth) {
+  x <- regionExtent[2] - regionExtent[1]
+  y <- regionExtent[4] - regionExtent[3] 
+  h <- defaultWidth/(x/y)
+  return(h)
+}
+
+f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice) {
   yearSpan <- paste0(l, "_", l + yearRange)
-  regionExtent <- f_regionExtentLookup(regionChoice)
+  #  regionExtent <- f_regionExtentLookup(regionChoice)
+  regionExtent <- ext_states_SW
   cropMask_region <- crop(cropMask_globe, regionExtent) # 1-0, locations 
-#  qName <- qNameLookup[crop_abb == qChoice, crop_name]
   qName <-"JAS"
   border <- get(regionChoice)
   border <- crop(border, regionExtent)
   border_sf <- sf::st_as_sf(border)
   border_proj_sf <- sf::st_transform(border_sf, proj_to_use)
   
-    crop_loc_globe <- cropMask_region
+  crop_loc_globe <- cropMask_region
   crop_loc_region <- any(crop(crop_loc_globe, regionExtent))
   crop_loc_region[crop_loc_region == 0] <- NA
   if (is.na(minmax(crop_loc_region)[1])) stop(paste0("crop area of ", qName, " in region ", regionChoice, " is zero."))
@@ -127,16 +137,12 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   #   gsl_region_masked <- mask(gsl_region_masked, border)
   gsl_region_masked <- mask(gsl_region, cropMask_region, maskvalues = NA)
   gsl_region_masked <- mask(gsl_region_masked, coastline, inverse = TRUE, touches = FALSE) #  removes coastal pixels ------
-  
-  # r_stress - days in the cropped area between planting and maturity  where the stress value is met or exceeded
   fileName_out_stress_days <- paste0(path, "crops/", regionChoice, "_", qChoice, "_", waterSource, "_ensemble_", outChoice, "_daily_mean", "_", k, "_sval_", stressValue, "_", yearSpan, ".tif")
-  
   print(system.time(r_stress <- rapp(stress, plant, maturity, sum, na.rm = TRUE, circular = TRUE, filename = fileName_out_stress_days, overwrite = TRUE)))
   names(r_stress) <- "stressCts"
   stress_max <- as.numeric(global(r_stress, max, na.rm = TRUE)) +5 # adding 5 bumps the maximum range which deals with some of the seq issues for some locations
   gsl_max <- as.numeric(global(gsl_region_masked, max, na.rm = TRUE)) + 1 # adding 1 bumps the maximum range
-  breaks <- ceiling(seq(from = 0, to = gsl_max, length.out = 9)) # 9 is the value when doing 8 colors
-  
+  #breaks <- ceiling(seq(from = 0, to = gsl_max, length.out = palCt+1)) 
   
   # prepare for graphing with proj_to_use
   r_stress_p <- as.polygons(r_stress, dissolve = TRUE, na.rm = TRUE)
@@ -163,30 +169,30 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   if (k == "historical" ) titleText <- gsub(", ,", ",", titleText, fixed = TRUE)
   
   gridLineSize <- 0.1; borderLineSize <- 0.2
-
-  g <- ggplot(r_stress_p_proj_sf, aes(fill = stressCts_disc_f)) +
-    scale_fill_manual(values = colorValues, drop = FALSE) +
-    geom_sf(show.legend = legendSwitch, size = gridLineSize) + 
-    labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + #
-    theme_bw() +
-    theme(
-      legend.text.align = 1,
-      axis.ticks = element_blank(),
-      plot.title = element_text(size = 12, hjust = 0.5),
-      plot.caption = element_text(hjust = 0, vjust = 3.0, size = 8),
-      legend.margin = margin(-20, 0, 0, 0)
-    ) +
-    theme(legend.position = 'bottom') +
-    geom_sf(data = border_proj_sf, 
-            color = "black", size = borderLineSize, stat = "sf", fill = NA, position = "identity") +
-    #    theme(legend.margin = margin(-20, 0, 0, 0)) +
-    theme(plot.margin = grid::unit(c(0,0,0,0), "mm"))
-  print(g)
-  fileName_out_stressDays_count <- paste0("graphics/cts/stressDaysbyCrop/", outChoice, "/stressDaysCtGS_", regionChoice, "_", qChoice, "_", waterSource, "_cts_", outChoice, "_daily_mean", "_", k, "_sval_", stressValue, "_", yearSpan, ".", graphicType) 
-  h <- f_h(regionExtent, defaultWidth)
-  ggsave(filename = fileName_out_stressDays_count, plot = g, device = graphicType, width = defaultWidth, height = h, units = "in", dpi = 300)
-  system2('pdfcrop', c(fileName_out_stressDays_count, fileName_out_stressDays_count)) # gets rid of white space around the figure in the pdf
-  print(paste0("fileName out: ", fileName_out_stressDays_count))
+  
+  # g <- ggplot(r_stress_p_proj_sf, aes(fill = stressCts_disc_f)) +
+  #   scale_fill_manual(values = colorValues, drop = FALSE) +
+  #   geom_sf(show.legend = legendSwitch, size = gridLineSize) + 
+  #   labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + #
+  #   theme_bw() +
+  #   theme(
+  #     legend.text.align = 1,
+  #     axis.ticks = element_blank(),
+  #     plot.title = element_text(size = 12, hjust = 0.5),
+  #     plot.caption = element_text(hjust = 0, vjust = 3.0, size = 8),
+  #     legend.margin = margin(-20, 0, 0, 0)
+  #   ) +
+  #   theme(legend.position = 'bottom') +
+  #   geom_sf(data = border_proj_sf, 
+  #           color = "black", size = borderLineSize, stat = "sf", fill = NA, position = "identity") +
+  #   #    theme(legend.margin = margin(-20, 0, 0, 0)) +
+  #   theme(plot.margin = grid::unit(c(0,0,0,0), "mm"))
+  # print(g)
+  # fileName_out_stressDays_count <- paste0("graphics/cts/stressDaysbyCrop/", outChoice, "/stressDaysCtGS_", regionChoice, "_", qChoice, "_", waterSource, "_cts_", outChoice, "_daily_mean", "_", k, "_sval_", stressValue, "_", yearSpan, ".", graphicType) 
+  # h <- f_h(regionExtent, defaultWidth)
+  # ggsave(filename = fileName_out_stressDays_count, plot = g, device = graphicType, width = defaultWidth, height = h, units = "in", dpi = 300)
+  # system2('pdfcrop', c(fileName_out_stressDays_count, fileName_out_stressDays_count)) # gets rid of white space around the figure in the pdf
+  # print(paste0("fileName out: ", fileName_out_stressDays_count))
   
   # share of stress days in gsl days -------------------------
   gsl_ratio <- 100 * r_stress/gsl_region_masked
@@ -197,7 +203,7 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   gsl_ratio_p_proj <- project(gsl_ratio_p, proj_to_use)
   gsl_ratio_p_proj_sf <- sf::st_as_sf(gsl_ratio_p_proj)
   
-  breaks <- testbreaks
+  #breaks <- testbreaks
   gsl_ratio_p_proj_sf$stressShare_disc <- cut(gsl_ratio_p_proj_sf$stressShare, breaks = breaks, include.lowest = TRUE, right = TRUE)
   gsl_ratio_p_proj_sf <- sf::st_intersection(gsl_ratio_p_proj_sf, border_proj_sf)
   gsl_ratio_p_proj_sf$stressShare_disc_f <- as.factor(gsl_ratio_p_proj_sf$stressShare_disc)
@@ -213,11 +219,10 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   
   caption <- caption_land_area
   
-  colorValues <- rev(colorList_disc_10_RdYlGn)
   g <- ggplot(gsl_ratio_p_proj_sf, aes(fill = stressShare_disc_f)) +
     scale_fill_manual(values = colorValues, drop = FALSE) +
-    geom_sf(show.legend = legendSwitch, size = gridLineSize) + 
-    labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
+    geom_sf(show.legend = legendSwitch, size = gridLineSize) +
+    labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) +
     theme_bw() +
     theme(
       legend.text.align = 1,
@@ -229,15 +234,16 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
       legend.margin = margin(-20, 0, 0, 0)
     ) +
     theme(legend.position = 'bottom') +
-    geom_sf(data = border_proj_sf, 
+    geom_sf(data = border_proj_sf,
             color = "black", size = borderLineSize, stat = "sf", fill = NA, position = "identity") +
     theme(legend.margin = margin(-20, 0, 0, 0)) +
     theme(plot.margin = grid::unit(c(0,0,0,0), "mm"))
   print(g)
-  
+  # browser()
   h <- f_h(regionExtent, defaultWidth)
-  fileName_stressDaysRatio_out <- paste0("graphics/cts/stressDaysRatiobyCrop/", outChoice, "/stressDaysGSShare_",  regionChoice, "_", qChoice, "_", waterSource, "_", outChoice, "_daysCts_", runlength,  "_stressValue_", stressValue, "_", k, "_", yearSpan, ".", graphicType)
+  fileName_stressDaysRatio_out <- paste0("graphics/cts/stressDaysRatiobyCrop/", outChoice, "/stressDaysGSShare_", palName, "_", palCt, "_", regionChoice, "_", waterSource, "_", outChoice, "_daysCts_", runlength,  "_stressValue_", stressValue, "_", k, "_", yearSpan, ".", graphicType)
   ggsave(filename = fileName_stressDaysRatio_out, plot = g, device = graphicType, width = defaultWidth, height = h, units = "in", dpi = 300) 
+  # https://pdfcrop.sourceforge.net - source of pdfcrop. Open source
   system2('pdfcrop', c(fileName_stressDaysRatio_out, fileName_stressDaysRatio_out)) # gets rid of white space around the figure in the pdf
   print(paste0("fileName out: ", fileName_stressDaysRatio_out))
 }
@@ -245,10 +251,10 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
 #test data
 k = "historical"
 l = 1991
-f_thi_cts_crop_graphing(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice, breaks)
+f_thi_cts_crop_graphing(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice)
 
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    f_thi_cts_crop_graphing(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice, breaks)
+    f_thi_cts_crop_graphing(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice)
   }
 }
