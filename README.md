@@ -1,2 +1,2 @@
-# PWC_NCA
-Code to to create graphic for the National Climate Assessment Figure 28.7
+# PWC_NCA package
+Code to create the graphic for the National Climate Assessment Figure 28.7
