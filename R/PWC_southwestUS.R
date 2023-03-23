@@ -5,6 +5,7 @@ library(ggplot2)
 #library(data.table)
 dir.create("graphics/cts/stressDaysRatiobyCrop/pwc_wbgt_out", F, F)
 dir.create("data/wbgt", F, F)
+dir.create("climdata", F, F)
 path <- "data/wbgt/"
 sspChoices <- c("ssp126", "ssp585")
 startYearChoices <- c(2041, 2081)
