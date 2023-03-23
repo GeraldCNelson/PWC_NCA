@@ -39,7 +39,7 @@ f_comb <- function(startYear, modelChoice.lower, climVar, sspChoice) {
   names(comb) <- paste0("X", as.character(seq(as.Date(startDate), as.Date(endDate), 1)))
   if (climVar %in% c("_tas_", "_tasmin_", "_tasmax_")) comb <- comb - 273.15 # convert from kelvin to C
   if (climVar == "_pr_") comb <- comb * 86400 # convert precip from kg m^-2 s^-1 to mm per day
-   yearSpan <- paste0(startYear, "_", startYear + 19)
+  yearSpan <- paste0(startYear, "_", startYear + 19)
   outf <- paste0(locOfFiles_out, modelChoice.lower, climVar, sspChoice, "_", yearSpan, ".tif")
   print(outf)
   writeRaster(comb, outf, overwrite = TRUE, wopt = woptList); flush.console()
@@ -55,5 +55,13 @@ for (sspChoice in sspChoices) {
   }
 }
 
-  
-  
+sspChoice <- "historical" 
+startYear <- 1991
+for (climVar in climVars) {
+  for (modelChoice.lower in modelChoices.lower) {
+    system.time(f_comb(startYear, modelChoice.lower, climVar, sspChoice))
+  }
+}
+
+
+
