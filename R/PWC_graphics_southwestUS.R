@@ -70,17 +70,6 @@ f_periodFancyName <- function(yearSpan) {
   return(yearSpanText)
 }
 
-# f_regionExtentLookup <- function(regionChoice) { # all in lat/lon with xmin, xmax, ymin, ymax order
-#   #   browser()
-#   ext_globe <- ext(-180, 180, -60, 90)
-#   ext_midEast <- ext(31, 62.0, 10.5, 37)
-#   ext_SouthAsia <- ext(65, 89, 6, 35)
-#   ext_SEAsia <- ext(89, 148, -18, 26)
-#   ext_NamCentAm <- ext(-121, -68, 10, 34)
-#   ext_states_SW <- align(ext(states_SW), rast(res = 0.5), "out")
-#   if (regionChoice == "states_SW") return(ext_states_SW) 
-# }
-
 f_regionFancyName <- function(regionChoice) {
   if (regionChoice == "states_SW") return("Southwest US")
 }
@@ -94,7 +83,6 @@ f_h <- function(regionExtent, defaultWidth) {
 
 f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, outChoice, regionChoice) {
   yearSpan <- paste0(l, "_", l + yearRange)
-  #  regionExtent <- f_regionExtentLookup(regionChoice)
   regionExtent <- ext_states_SW
   cropMask_region <- crop(cropMask_globe, regionExtent) # 1-0, locations 
   qName <-"JAS"

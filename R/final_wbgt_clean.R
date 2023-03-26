@@ -5,10 +5,10 @@
   # temperature choice
   tempChoice <- "tas"
   # choice of using rsds. if FALSE create a raster with 0s instead of values
-  #fileDestination <- "data/wbgt"
-  if (!tempChoice == "tas") fileDestination <- "climdata_processed/"
-  useRSDS <- FALSE
-  if (!useRSDS == TRUE) fileDestination <- "climdata_processed/"
+  fileDestination <- "climdata_processed/"
+  # if (!tempChoice == "tas") fileDestination <- "climdata_processed/"
+  # useRSDS <- TRUE
+  # if (!useRSDS == TRUE) fileDestination <- "climdata_processed/"
   
   # create raster with all zeros where land is by setting values of a real RSDS raster > 0 to 0
   # files only need to be generated once
@@ -108,9 +108,9 @@ f_combineYears <- function(k, l, modelChoice, outChoice, optimizeChoice) {
 
 # calculate Tg results separately -----
 f_Tgcalc <- function(k, l, modelChoice, useRSDS) {
-  filesCompleted <- list.files(fileDestination, full.names = TRUE)
-  filesCompleted <- filesCompleted[!grepl("aux.xml", filesCompleted, fixed = TRUE)]
-  filesCompleted <- gsub("//", "/", filesCompleted)
+  # filesCompleted <- list.files(fileDestination, full.names = TRUE)
+  # filesCompleted <- filesCompleted[!grepl("aux.xml", filesCompleted, fixed = TRUE)]
+  # filesCompleted <- gsub("//", "/", filesCompleted)
   modelChoice_lower <- tolower(modelChoice)
   startDate_period <- paste0(l, "-01-01")
   endDate_period <- paste0(l + yearRange, "-12-31")
@@ -123,8 +123,7 @@ f_Tgcalc <- function(k, l, modelChoice, useRSDS) {
   fileName_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
   fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
   fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-  fileName_rsds <- paste0("path_clim/", modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") # the original rsds data
-  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_hr_", k, "_", yearSpan, ".tif") # new rsds data adjusted for day length, already cropped
+  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") # the original rsds data
   
   temp_r <- rast(fileName_temp)
   hurs_r <- rast(fileName_hurs)
@@ -138,7 +137,7 @@ f_Tgcalc <- function(k, l, modelChoice, useRSDS) {
   
   for (yearNum in l:(l + yearRange)) {
     outf <- paste0(fileDestination, "Tg_out", "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", "y_", yearNum, ".tif")
-    if (!outf %in% filesCompleted) {
+   # if (!outf %in% filesCompleted) {
       startDate <- paste0(yearNum, "-01-01")
       endDate <- paste0(yearNum, "-12-31")
       print(startDate)
@@ -166,13 +165,13 @@ f_Tgcalc <- function(k, l, modelChoice, useRSDS) {
       print(speed)
       print(paste0("filename out: ", outf))
     }
-  }
+  #}
 }
 
 f_pwc_wbgt_utci <- function(k, l, modelChoice, outChoice, optimizeChoice, tempChoice) {
-  filesCompleted <- list.files(fileDestination, full.names = TRUE)
-  filesCompleted <- filesCompleted[!grepl("aux.xml", filesCompleted, fixed = TRUE)]
-  filesCompleted <- gsub("//", "/", filesCompleted)
+  # filesCompleted <- list.files(fileDestination, full.names = TRUE)
+  # filesCompleted <- filesCompleted[!grepl("aux.xml", filesCompleted, fixed = TRUE)]
+  # filesCompleted <- gsub("//", "/", filesCompleted)
   modelChoice_lower <- tolower(modelChoice)
   startDate_period <- paste0(l, "-01-01")
   endDate_period <- paste0(l + yearRange, "-12-31")
@@ -183,8 +182,7 @@ f_pwc_wbgt_utci <- function(k, l, modelChoice, outChoice, optimizeChoice, tempCh
   fileName_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
   fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
   fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-  fileName_rsds <- paste0("path_clim/", modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") # the original rsds data
-  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_hr_", k, "_", yearSpan, ".tif") # new rsds data adjusted for day length, already cropped
+  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") # the original rsds data
   fileName_Tg <- paste0(path_clim_processed, "Tg_out_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", yearSpan, ".tif")
   
   temp_r <- rast(fileName_temp)
@@ -200,7 +198,7 @@ f_pwc_wbgt_utci <- function(k, l, modelChoice, outChoice, optimizeChoice, tempCh
   names(Tg_r) <- names(temp_r)
   for (yearNum in l:(l + yearRange)) {
     outf_pwc_adj <- paste0(fileDestination, outChoice, "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", "y_", yearNum, ".tif")
-    if (!outf_pwc_adj %in% filesCompleted) {
+   # if (!outf_pwc_adj %in% filesCompleted) {
       startDate <- paste0(yearNum, "-01-01")
       endDate <- paste0(yearNum, "-12-31")
       print(startDate)
@@ -232,7 +230,7 @@ f_pwc_wbgt_utci <- function(k, l, modelChoice, outChoice, optimizeChoice, tempCh
       gc()
     }
   }
-}
+#}
 
 f_means <- function(k, l, modelChoice, outChoice) {
   yearSpan <- paste0(l, "_", l + yearRange)

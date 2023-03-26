@@ -6,16 +6,18 @@
   library(data.table)
   library(ggplot2)
   woptList <- list(gdal = c("COMPRESS = DEFLATE", "PREDICTOR = 2", "ZLEVEL = 6", "NUM_THREADS = ALL_CPUS", names = c("runStarts", "runLength")))
+  f_palette <- function(palName, palCt) {
+    colorList <- (RColorBrewer::brewer.pal(palCt, palName)) 
+  }
   terraOptions(ncopies = 1, progress = 10, tempdir = "data/ISIMIP", verbose = FALSE)
   source("R/basicVariables.R")
   source("R/basicSpatialVariables.R")
-  # regionChoices -----. Note: these are all in lat long.
   regionChoices <- c("states_SW") 
-  cropmasks_complete <- c("almond", "apple", "barley", "bean", "blueberry", "broadbean", "cassava", "cherry", "chickpea", "cotton", "cowpea", "grape", "groundnut", "lentil", "maize", "millet", "mustard", "oats", "pea", "potato", "rapeseed", "rice", "rye", "sorghum", "soybean", "sugarbeet", "sunflower", "sweetpotato", "tomato", "walnut", "wheat", "yam")
-  cropmasks_perennial <- c("almond", "apple", "blueberry", "cherry", "grape")
-  cropmasks_annual <- cropmasks_complete[!cropmasks_complete %in% cropmasks_perennial]
-  cropChoices <- c( "mai", "ri1",  "wwh") #"mil", "cas", "bar", "nut", "sgc",
-  waterSources <- c("ir", "rf")
+  # cropmasks_complete <- c("almond", "apple", "barley", "bean", "blueberry", "broadbean", "cassava", "cherry", "chickpea", "cotton", "cowpea", "grape", "groundnut", "lentil", "maize", "millet", "mustard", "oats", "pea", "potato", "rapeseed", "rice", "rye", "sorghum", "soybean", "sugarbeet", "sunflower", "sweetpotato", "tomato", "walnut", "wheat", "yam")
+  # cropmasks_perennial <- c("almond", "apple", "blueberry", "cherry", "grape")
+  # cropmasks_annual <- cropmasks_complete[!cropmasks_complete %in% cropmasks_perennial]
+  # cropChoices <- c( "mai", "ri1",  "wwh") #"mil", "cas", "bar", "nut", "sgc",
+  # waterSources <- c("ir", "rf")
   waterSources <- c("rf") # just look at rainfed locations
   
   breaks_percent <- c(0, 50, 75, 100)
@@ -53,11 +55,9 @@
   # lookup table for the crop names in the masks and the abbreviations used in the growing season netcdfs
   # cropNameLookup <- as.data.table(readxl::read_excel("/Volumes/ExtremeSSD2/heatstress/data/crop_mask/cropMask_calendarLookup.xlsx"))
   
-  # outChoice <- "pwc_wbgt_out" # choices are pwc_utci_out, pwc_wbgt_out, wbgt_out, utci_out, Tg_out
-  
   # set colorlist choice here
   palName_PWC <- "YlOrRd"
-  # palName_NCA <- "BuPu"
+  # palName_NCA <- "BuPu" alternate palette choice
   palCt <- 9
   colorList <- f_palette(palName, palCt)
   

@@ -20,7 +20,7 @@ modelChoices.lower <- tolower(modelChoices)
 #test data
 modelChoice.lower <- "gfdl-esm4"
 startYearChoice = 2041
-climateVar <- "_tasmin_"
+climateVar <- "_rsds_"
 sspChoice <- "ssp126"
 
 f_comb <- function(startYearChoice, modelChoice.lower, climateVar, sspChoice) {
@@ -53,16 +53,15 @@ for (sspChoice in sspChoices) {
       }
     }
   }
-  #}
-  
-  sspChoice <- "historical" 
-  startYearChoice <- 1991
-  for (climateVar in climateVars) {
-    for (modelChoice.lower in modelChoices.lower) {
-      system.time(f_comb(startYearChoice, modelChoice.lower, climateVar, sspChoice))
-    }
+}
+
+sspChoice <- "historical" 
+startYearChoice <- 1991
+for (climateVar in climateVars) {
+  for (modelChoice.lower in modelChoices.lower) {
+    system.time(f_comb(startYearChoice, modelChoice.lower, climateVar, sspChoice))
   }
-  
-  
-  
-  
+}
+
+
+
