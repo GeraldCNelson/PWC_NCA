@@ -7,10 +7,9 @@ The process involves the following steps
 * download climate data files from the ISIMIP3b [https://www.isimip.org](https://www.isimip.org) data set
 
 * run R code 
-
-** R/combineRasters.R prepares the climate data for analysis
-** R/final_wbgt_clean.R generates the ensemble results files
-** R/pwc_graphics_southwestUS.R generates the graphics in pdf format.
+  * R/combineRasters.R prepares the climate data for analysis
+  * R/final_wbgt_clean.R generates the ensemble results files
+  * R/pwc_graphics_southwestUS.R generates the graphics in pdf format.
 
 ## Install needed R packages
 
