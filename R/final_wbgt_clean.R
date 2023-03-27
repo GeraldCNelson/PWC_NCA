@@ -4,27 +4,22 @@
   library(terra)
   # temperature choice
   tempChoice <- "tas"
-  # choice of using rsds. if FALSE create a raster with 0s instead of values
   fileDestination <- "climdata_processed/"
-  # if (!tempChoice == "tas") fileDestination <- "climdata_processed/"
-  # useRSDS <- TRUE
-  # if (!useRSDS == TRUE) fileDestination <- "climdata_processed/"
-  
-  # create raster with all zeros where land is by setting values of a real RSDS raster > 0 to 0
-  # files only need to be generated once
-  # r_zeros_1991 <- rast("climdata_processed/mri-esm2-0_rsds_hr_historical_1991_2010.tif")
-  # r_zeros_1991[r_zeros_1991 > 0] <- 0
-  # writeRaster(r_zeros_1991, filename = "climdata_processed/r_zeros_1991.tif")
-  # r_zeros_2041 <- rast("climdata_processed/mri-esm2-0_rsds_hr_ssp585_2041_2060.tif")
-  # r_zeros_2041[r_zeros_2041 > 0] <- 0
-  # writeRaster(r_zeros_2041, filename = "climdata_processed/r_zeros_2041.tif")
-  # r_zeros_2081 <- rast("climdata_processed/mri-esm2-0_rsds_hr_ssp585_2081_2100.tif")
-  # r_zeros_2081[r_zeros_2081 > 0] <- 0
-  # writeRaster(r_zeros_2081, filename = "climdata_processed/r_zeros_2081.tif")
-  
-  r_zeros_1991 <- rast("climdata_processed/r_zeros_1991.tif")
-  r_zeros_2041 <- rast("climdata_processed/r_zeros_2041.tif")
-  r_zeros_2081 <- rast("climdata_processed/r_zeros_2081.tif")
+  # # create raster with all zeros where land is by setting values of a real RSDS raster > 0 to 0
+  # # files only need to be generated once
+  # # r_zeros_1991 <- rast("climdata_processed/mri-esm2-0_rsds_hr_historical_1991_2010.tif")
+  # # r_zeros_1991[r_zeros_1991 > 0] <- 0
+  # # writeRaster(r_zeros_1991, filename = "climdata_processed/r_zeros_1991.tif")
+  # # r_zeros_2041 <- rast("climdata_processed/mri-esm2-0_rsds_hr_ssp585_2041_2060.tif")
+  # # r_zeros_2041[r_zeros_2041 > 0] <- 0
+  # # writeRaster(r_zeros_2041, filename = "climdata_processed/r_zeros_2041.tif")
+  # # r_zeros_2081 <- rast("climdata_processed/mri-esm2-0_rsds_hr_ssp585_2081_2100.tif")
+  # # r_zeros_2081[r_zeros_2081 > 0] <- 0
+  # # writeRaster(r_zeros_2081, filename = "climdata_processed/r_zeros_2081.tif")
+  # 
+  # r_zeros_1991 <- rast("climdata_processed/r_zeros_1991.tif")
+  # r_zeros_2041 <- rast("climdata_processed/r_zeros_2041.tif")
+  # r_zeros_2081 <- rast("climdata_processed/r_zeros_2081.tif")
   
   path_code <- "R/code"
   path_data <- "data"
@@ -45,7 +40,7 @@ extent_noAntarctica <- ext(-180, 180, -60, 90) #-60 gets rid of Antarctica for g
 #  test data
 l <- 2041
 k <- "ssp126"
-modelChoice <- "MRI-ESM2-0"
+modelChoice <- "GFDL-ESM4"
 
 # infile_mask <- paste0(rasterMaskLoc, cropChoice, ".tif")
 # cropMask_globe <- rast(infile_mask)
@@ -90,7 +85,7 @@ f_readRast <- function(yearNum, k, modelChoice, outChoice, optimizeChoice) {
   names(r) <- paste0("X", dates)
   return(r)
 }
-# 
+
 f_combineYears <- function(k, l, modelChoice, outChoice, optimizeChoice) {
   # browser()
   # filesCompleted <- list.files(fileDestination, full.names = TRUE)
@@ -107,7 +102,7 @@ f_combineYears <- function(k, l, modelChoice, outChoice, optimizeChoice) {
 }
 
 # calculate Tg results separately -----
-f_Tgcalc <- function(k, l, modelChoice, useRSDS) {
+f_Tgcalc <- function(k, l, modelChoice) {
   # filesCompleted <- list.files(fileDestination, full.names = TRUE)
   # filesCompleted <- filesCompleted[!grepl("aux.xml", filesCompleted, fixed = TRUE)]
   # filesCompleted <- gsub("//", "/", filesCompleted)
@@ -123,17 +118,12 @@ f_Tgcalc <- function(k, l, modelChoice, useRSDS) {
   fileName_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
   fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
   fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") # the original rsds data
+  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") 
   
   temp_r <- rast(fileName_temp)
   hurs_r <- rast(fileName_hurs)
   wind_r <- rast(fileName_sfcwind)
-  if (useRSDS == TRUE) {
     solar_r <- rast(fileName_rsds)
-  } else {
-    solar_r <- get(paste0("r_zeros_", l))
-    names(solar_r) <- names(temp_r)
-  }
   
   for (yearNum in l:(l + yearRange)) {
     outf <- paste0(fileDestination, "Tg_out", "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", "y_", yearNum, ".tif")
@@ -182,19 +172,15 @@ f_pwc_wbgt_utci <- function(k, l, modelChoice, outChoice, optimizeChoice, tempCh
   fileName_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
   fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
   fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") # the original rsds data
+  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") 
   fileName_Tg <- paste0(path_clim_processed, "Tg_out_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", yearSpan, ".tif")
   
   temp_r <- rast(fileName_temp)
   hurs_r <- rast(fileName_hurs)
   wind_r <- rast(fileName_sfcwind)
   Tg_r <- rast(fileName_Tg)
-  if (useRSDS == TRUE) {
-    solar_r <- rast(fileName_rsds)
-  } else {
-    solar_r <- get(paste0("r_zeros_", l))
-    names(solar_r) <- names(temp_r)
-  }
+     solar_r <- rast(fileName_rsds)
+  
   names(Tg_r) <- names(temp_r)
   for (yearNum in l:(l + yearRange)) {
     outf_pwc_adj <- paste0(fileDestination, outChoice, "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", "y_", yearNum, ".tif")
@@ -271,18 +257,17 @@ k <- "ssp126"
 modelChoice <- "GFDL-ESM4"
 modelChoice_lower <- tolower(modelChoice)
 yearSpan <- paste0(l, "_", l + yearRange)
-yearNum <- l + 16
 
 # Tg files generation -----
 for (k in sspChoices) {
   for (l in startYearChoices) {
     for (modelChoice in modelChoices) {
-      f_Tgcalc(k, l, modelChoice, useRSDS)
+      f_Tgcalc(k, l, modelChoice)
     }
   }
   k <- "historical"
   l <- 1991
-  f_Tgcalc(k, l, modelChoice, useRSDS)
+  f_Tgcalc(k, l, modelChoice)
 }
 
 # combine Tg years -----
@@ -331,10 +316,10 @@ for (k in sspChoices) {
 
 # calculate period mean for each model -----
 # scenarios
-for (modelChoice in modelChoices) {
   for (k in sspChoices) {
     for (l in startYearChoices) {
-      f_means(k, l, modelChoice, outChoice)
+      for (modelChoice in modelChoices) {
+        f_means(k, l, modelChoice, outChoice)
     }
   }
 }
@@ -385,17 +370,13 @@ for (modelChoice in modelChoices) {
 # fileName_temp <- paste0(path_clim_processed, modelChoice_lower, "_temp_", k, "_", yearSpan, ".tif")
 # fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
 # fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-# fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_hr_", k, "_", yearSpan, ".tif") # new rsds data adjusted for day length, already cropped
 # fileName_Tg <- paste0(path_clim_processed, "Tg_out_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", yearSpan, ".tif")
 # 
 # fileName_utci <- paste0(fileDestination, "utci_out", "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", yearSpan, ".tif")
 # fileName_wbgt <- paste0(fileDestination, "wbgt_out", "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", yearSpan, ".tif")
 # hurs <- rast(fileName_hurs)
 # temp <- rast(fileName_temp)
-# if (useRSDS == TRUE) {
 #   solar_r <- rast(fileName_rsds)
-# } else {
-#   solar_r <- get(paste0("r_zeros_", l))
 #   names(solar_r) <- names(temp_r)
 # }
 # wbgt <- rast(fileName_wbgt)
