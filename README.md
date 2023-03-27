@@ -14,6 +14,7 @@ The process involves the following steps
 ## Install needed R packages
 
 The following R packages are used - terra, geodata, ggplot2, data.table, Rcpp. Use this code to install them all at one time.
+
 install.packages(c("terra", "geodata", "ggplot2", "data.table", "Rcpp", "sf"))
 
 ## Download climate data files
