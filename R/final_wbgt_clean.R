@@ -28,7 +28,7 @@
   woptList <- list(gdal = c("COMPRESS=DEFLATE", "PREDICTOR = 2", "ZLEVEL = 6", "NUM_THREADS = ALL_CPUS"))
 }
 sourceCpp(file.path(path_code, "wbgt9.cpp"))
-outChoice <- "pwc_wbgt_out" # choices are pwc_utci_out, pwc_wbgt_out, wbgt_out, utci_out, Tg_out, Tnwb_out
+outChoice <- "pwc_wbgt_out" 
 optimizeChoice <- 2
 modelChoices <- c("GFDL-ESM4", "IPSL-CM6A-LR", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL")
 sspChoices <- c("ssp126", "ssp585")
@@ -115,46 +115,46 @@ f_Tgcalc <- function(k, l, modelChoice) {
   # print(outf_Tg)
   #   if (!outf_Tg %in% filesCompleted) {
   tempComponent <- paste0("_", tempChoice, "_")
-  fileName_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
-  fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
-  fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") 
+  inFile_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
+  inFile_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
+  inFile_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
+  inFile_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_hr_cropped_", k, "_", yearSpan, ".tif") 
   
-  temp_r <- rast(fileName_temp)
-  hurs_r <- rast(fileName_hurs)
-  wind_r <- rast(fileName_sfcwind)
-    solar_r <- rast(fileName_rsds)
+  temp_r <- rast(inFile_temp)
+  hurs_r <- rast(inFile_hurs)
+  wind_r <- rast(inFile_sfcwind)
+  solar_r <- rast(inFile_rsds)
   
   for (yearNum in l:(l + yearRange)) {
     outf <- paste0(fileDestination, "Tg_out", "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", "y_", yearNum, ".tif")
-   # if (!outf %in% filesCompleted) {
-      startDate <- paste0(yearNum, "-01-01")
-      endDate <- paste0(yearNum, "-12-31")
-      print(startDate)
-      print(endDate)
-      indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
-      indicesChar <- paste0("X", indices)
-      temp_yr <- subset(temp_r, indicesChar)
-      
-      hurs_yr <- subset(hurs_r, indicesChar)
-      wind_yr <- subset(wind_r, indicesChar)
-      solar_yr <- subset(solar_r, indicesChar)
-      lat_yr <- latlyrs_365
-      if (nlyr(temp_yr) == 366) lat_yr <- latlyrs_366
-      year_yr <- rast(nrows = 360, ncols = 720)
-      year_yr <- f_year(nlyr(temp_yr), l)
-      doy_yr <- doy_yr_365
-      if (nlyr(temp_yr) == 366) doy_yr <- doy_yr_366
-      system.time(s2 <- sds(temp_yr, hurs_yr, wind_yr, solar_yr, lat_yr, year_yr, doy_yr))
-      print(paste(nlyr(temp_yr), nlyr(hurs_yr), nlyr(wind_yr), nlyr(solar_yr), nlyr(lat_yr), nlyr(year_yr), nlyr(doy_yr)))
-      names(s2) <- c("temp", "hurs", "wind", "srad", "lat", "year", "doy")
-      fout <- outf
-      tstart <- Sys.time()
-      Tg <- lapp(s2, fun = Tg_out, tolerance = 0.1, optim = optimizeChoice, output = "Tg_out", filename = fout, overwrite = TRUE, wopt = woptList)
-      speed <- Sys.time() - tstart
-      print(speed)
-      print(paste0("filename out: ", outf))
-    }
+    # if (!outf %in% filesCompleted) {
+    startDate <- paste0(yearNum, "-01-01")
+    endDate <- paste0(yearNum, "-12-31")
+    print(startDate)
+    print(endDate)
+    indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
+    indicesChar <- paste0("X", indices)
+    temp_yr <- subset(temp_r, indicesChar)
+    
+    hurs_yr <- subset(hurs_r, indicesChar)
+    wind_yr <- subset(wind_r, indicesChar)
+    solar_yr <- subset(solar_r, indicesChar)
+    lat_yr <- latlyrs_365
+    if (nlyr(temp_yr) == 366) lat_yr <- latlyrs_366
+    year_yr <- rast(nrows = 360, ncols = 720)
+    year_yr <- f_year(nlyr(temp_yr), l)
+    doy_yr <- doy_yr_365
+    if (nlyr(temp_yr) == 366) doy_yr <- doy_yr_366
+    system.time(s2 <- sds(temp_yr, hurs_yr, wind_yr, solar_yr, lat_yr, year_yr, doy_yr))
+    print(paste(nlyr(temp_yr), nlyr(hurs_yr), nlyr(wind_yr), nlyr(solar_yr), nlyr(lat_yr), nlyr(year_yr), nlyr(doy_yr)))
+    names(s2) <- c("temp", "hurs", "wind", "srad", "lat", "year", "doy")
+    fout <- outf
+    tstart <- Sys.time()
+    Tg <- lapp(s2, fun = Tg_out, tolerance = 0.1, optim = optimizeChoice, output = "Tg_out", filename = fout, overwrite = TRUE, wopt = woptList)
+    speed <- Sys.time() - tstart
+    print(speed)
+    print(paste0("filename out: ", outf))
+  }
   #}
 }
 
@@ -172,50 +172,50 @@ f_pwc_wbgt_utci <- function(k, l, modelChoice, outChoice, optimizeChoice, tempCh
   fileName_temp <- paste0(path_clim_processed, modelChoice_lower, tempComponent, k, "_", yearSpan, ".tif")
   fileName_hurs <- paste0(path_clim_processed, modelChoice_lower, "_hurs_", k, "_", yearSpan, ".tif")
   fileName_sfcwind <- paste0(path_clim_processed, modelChoice_lower, "_sfcwind_", k, "_", yearSpan, ".tif")
-  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_", k, "_", yearSpan, ".tif") 
+  fileName_rsds <- paste0(path_clim_processed, modelChoice_lower, "_rsds_hr_cropped_", k, "_", yearSpan, ".tif") 
   fileName_Tg <- paste0(path_clim_processed, "Tg_out_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", yearSpan, ".tif")
   
   temp_r <- rast(fileName_temp)
   hurs_r <- rast(fileName_hurs)
   wind_r <- rast(fileName_sfcwind)
   Tg_r <- rast(fileName_Tg)
-     solar_r <- rast(fileName_rsds)
+  solar_r <- rast(fileName_rsds)
   
   names(Tg_r) <- names(temp_r)
   for (yearNum in l:(l + yearRange)) {
     outf_pwc_adj <- paste0(fileDestination, outChoice, "_", modelChoice_lower, "_", optimizeChoice, "_", k, "_", "y_", yearNum, ".tif")
-   # if (!outf_pwc_adj %in% filesCompleted) {
-      startDate <- paste0(yearNum, "-01-01")
-      endDate <- paste0(yearNum, "-12-31")
-      print(startDate)
-      print(endDate)
-      indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
-      indicesChar <- paste0("X", indices)
-      temp_yr <- subset(temp_r, indicesChar)
-      hurs_yr <- subset(hurs_r, indicesChar)
-      wind_yr <- subset(wind_r, indicesChar)
-      solar_yr <- subset(solar_r, indicesChar)
-      Tg_yr <- subset(Tg_r, indicesChar)
-      lat_yr <- latlyrs_365
-      if (nlyr(temp_yr) == 366) lat_yr <- latlyrs_366
-      year_yr <- f_year(nlyr(temp_yr), l)
-      doy_yr <- doy_yr_365
-      if (nlyr(temp_yr) == 366) doy_yr <- doy_yr_366
-      names(year_yr) <- names(doy_yr) <- names(lat_yr) <- names(temp_yr)
-      dates_period <- seq(as.Date(startDate), as.Date(endDate), 1)
-      
-      system.time(s2 <- sds(temp_yr, hurs_yr, wind_yr, solar_yr, Tg_yr, lat_yr, year_yr, doy_yr))
-      names(s2) <- c("temp", "hurs", "wind", "srad", "Tg", "lat", "year", "doy")
-      fout <- outf_pwc_adj
-      tstart <- Sys.time()
-      pwc <- lapp(s2, fun = pwc_lapp, tolerance = 0.1, optim = optimizeChoice, output = outChoice, filename = fout, overwrite = TRUE, wopt = woptList)
-      speed <- Sys.time() - tstart
-      print(speed)
-      print(fout)
-      print(pwc)
-      gc()
-    }
+    # if (!outf_pwc_adj %in% filesCompleted) {
+    startDate <- paste0(yearNum, "-01-01")
+    endDate <- paste0(yearNum, "-12-31")
+    print(startDate)
+    print(endDate)
+    indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
+    indicesChar <- paste0("X", indices)
+    temp_yr <- subset(temp_r, indicesChar)
+    hurs_yr <- subset(hurs_r, indicesChar)
+    wind_yr <- subset(wind_r, indicesChar)
+    solar_yr <- subset(solar_r, indicesChar)
+    Tg_yr <- subset(Tg_r, indicesChar)
+    lat_yr <- latlyrs_365
+    if (nlyr(temp_yr) == 366) lat_yr <- latlyrs_366
+    year_yr <- f_year(nlyr(temp_yr), l)
+    doy_yr <- doy_yr_365
+    if (nlyr(temp_yr) == 366) doy_yr <- doy_yr_366
+    names(year_yr) <- names(doy_yr) <- names(lat_yr) <- names(temp_yr)
+    dates_period <- seq(as.Date(startDate), as.Date(endDate), 1)
+    
+    system.time(s2 <- sds(temp_yr, hurs_yr, wind_yr, solar_yr, Tg_yr, lat_yr, year_yr, doy_yr))
+    names(s2) <- c("temp", "hurs", "wind", "srad", "Tg", "lat", "year", "doy")
+    fout <- outf_pwc_adj
+    tstart <- Sys.time()
+    pwc <- lapp(s2, fun = pwc_lapp, tolerance = 0.1, optim = optimizeChoice, output = outChoice, filename = fout, overwrite = TRUE, wopt = woptList)
+    speed <- Sys.time() - tstart
+    print(speed)
+    print(fout)
+    print(pwc)
+    gc()
   }
+}
 #}
 
 f_means <- function(k, l, modelChoice, outChoice) {
@@ -316,10 +316,10 @@ for (k in sspChoices) {
 
 # calculate period mean for each model -----
 # scenarios
-  for (k in sspChoices) {
-    for (l in startYearChoices) {
-      for (modelChoice in modelChoices) {
-        f_means(k, l, modelChoice, outChoice)
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    for (modelChoice in modelChoices) {
+      f_means(k, l, modelChoice, outChoice)
     }
   }
 }
