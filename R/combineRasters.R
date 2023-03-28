@@ -41,6 +41,7 @@ f_comb <- function(startYearChoice, modelChoice.lower, climateVar, sspChoice) {
   names(comb) <- paste0("X", as.character(seq(as.Date(startDate), as.Date(endDate), 1)))
   if (climateVar %in% c("_tas_", "_tasmin_", "_tasmax_")) comb <- comb - 273.15 # convert from kelvin to C
   if (climateVar == "_pr_") comb <- comb * 86400 # convert precip from kg m^-2 s^-1 to mm per day
+  id (climateVar == "_rsds_") comb <- comb * (4*365.25)
   print(outf)
   writeRaster(comb, outf, overwrite = TRUE, wopt = woptList); flush.console()
 }
