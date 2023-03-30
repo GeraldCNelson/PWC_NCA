@@ -126,7 +126,7 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   gsl_region <- crop(gsl, regionExtent)
   #   gsl_region_masked <- mask(gsl_region_masked, border)
   gsl_region_masked <- mask(gsl_region, cropMask_region, maskvalues = NA)
-  gsl_region_masked <- mask(gsl_region_masked, coastline, inverse = TRUE, touches = FALSE) #  removes coastal pixels ------
+  gsl_region_masked <- mask(gsl_region_masked, coastline, inverse = TRUE, touches = FALSE)
   fileName_out_stress_days <- paste0(path, "crops/", regionChoice, "_", qChoice, "_", waterSource, "_ensemble_", outChoice, "_daily_mean", "_", k, "_sval_", stressValue, "_", yearSpan, ".tif")
   print(system.time(r_stress <- rapp(stress, plant, maturity, sum, na.rm = TRUE, circular = TRUE, filename = fileName_out_stress_days, overwrite = TRUE)))
   names(r_stress) <- "stressCts"
@@ -168,7 +168,6 @@ f_thi_cts_crop_graphing <- function(k, l, stressValue, qChoice, waterSource, out
   gsl_ratio_p <- as.polygons(gsl_ratio, dissolve = TRUE, na.rm = TRUE)
   gsl_ratio_p_proj <- project(gsl_ratio_p, proj_to_use)
   gsl_ratio_p_proj_sf <- sf::st_as_sf(gsl_ratio_p_proj)
-  
    gsl_ratio_p_proj_sf$stressShare_disc <- cut(gsl_ratio_p_proj_sf$stressShare, breaks = breaks, include.lowest = TRUE, right = TRUE)
   gsl_ratio_p_proj_sf <- sf::st_intersection(gsl_ratio_p_proj_sf, border_proj_sf)
   gsl_ratio_p_proj_sf$stressShare_disc_f <- as.factor(gsl_ratio_p_proj_sf$stressShare_disc)
