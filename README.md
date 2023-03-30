@@ -13,9 +13,9 @@ The process involves the following steps
 
 ## Install needed R packages
 
-The following R packages are used - terra, geodata, ggplot2, data.table, Rcpp. Use this code to install them all at one time.
+The following R packages are used - terra, meteor, geodata, ggplot2, data.table, Rcpp. Use this code to install them all at one time.
 
-install.packages(c("terra", "geodata", "ggplot2", "data.table", "Rcpp", "sf"))
+install.packages(c("terra", meteor, "geodata", "ggplot2", "data.table", "Rcpp", "sf"))
 
 ## Download climate data files
 
@@ -31,4 +31,4 @@ This is done with R/final_wbgt_clean.R. The final output of this process are fil
 
 ## Generate the graphics
 
-This is done with R/pwcGraphics.R. The graphics are written to the _graphics_ directory.
+This is done with R/PWC_graphics_southwestUS.R. The graphics are written to the _graphics_ directory.

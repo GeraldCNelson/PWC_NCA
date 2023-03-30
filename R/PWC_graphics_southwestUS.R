@@ -46,7 +46,6 @@ f_quarterFancyName <- function(qName) {
 }
 
 f_stressMetricText <- function(outChoice) {
-  if (outChoice %in% c("pwc_utci_out", "utci_out")) stressMetric <- "UTCI"
   if (outChoice %in% c("pwc_wbgt_out", "wbgt_out")) stressMetric <- "WBGT"
   return(stressMetric)
 }
